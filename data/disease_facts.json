@@ -1,0 +1,74 @@
+[
+  {
+    "id": "diabetes_basics",
+    "title": "Diabetes Management",
+    "content_en": "Diabetes is a condition where blood sugar levels are too high. It occurs when your body cannot make or use insulin properly. Common symptoms include frequent urination, excessive thirst, and unexplained weight loss. Management includes regular blood sugar monitoring, healthy diet, exercise, and medication as prescribed by your doctor.",
+    "content_hi": "मधुमेह एक ऐसी स्थिति है जहाँ रक्त शर्करा का स्तर बहुत अधिक होता है। यह तब होता है जब आपका शरीर इंसुलिन का सही तरीके से उत्पादन या उपयोग नहीं कर सकता। सामान्य लक्षणों में बार-बार पेशाब आना, अत्यधिक प्यास, और अस्पष्ट वजन घटना शामिल है।",
+    "content_bn": "ডায়াবেটিস এমন একটি অবস্থা যেখানে রক্তে চিনির মাত্রা খুব বেশি থাকে। এটি ঘটে যখন আপনার শরীর ইনসুলিন সঠিকভাবে তৈরি বা ব্যবহার করতে পারে না। সাধারণ লক্ষণগুলির মধ্যে রয়েছে ঘন ঘন প্রস্রাব, অতিরিক্ত তৃষ্ণা এবং অব্যাখ্যাত ওজন হ্রাস।",
+    "keywords": ["diabetes", "blood sugar", "insulin", "मधुमेह", "रक्त शर्करा", "ডায়াবেটিস"],
+    "source": "WHO Guidelines"
+  },
+  {
+    "id": "hypertension_basics",
+    "title": "High Blood Pressure",
+    "content_en": "High blood pressure (hypertension) is when blood flows through your blood vessels with too much force. It's often called the 'silent killer' because it usually has no symptoms. Risk factors include age, family history, obesity, and high salt intake. Regular monitoring and lifestyle changes can help manage it.",
+    "content_hi": "उच्च रक्तचाप (हाइपरटेंशन) तब होता है जब रक्त आपकी रक्त वाहिकाओं के माध्यम से बहुत अधिक बल के साथ बहता है। इसे अक्सर 'मूक हत्यारा' कहा जाता है क्योंकि आमतौर पर इसके कोई लक्षण नहीं होते।",
+    "content_bn": "উচ্চ রক্তচাপ (হাইপারটেনশন) হল যখন রক্ত আপনার রক্তনালীর মধ্য দিয়ে অত্যধিক শক্তির সাথে প্রবাহিত হয়। একে প্রায়ই 'নীরব ঘাতক' বলা হয় কারণ সাধারণত এর কোনো লক্ষণ থাকে না।",
+    "keywords": ["hypertension", "blood pressure", "उच्च रक्तचाप", "হাইপারটেনশন", "রক্তচাপ"],
+    "source": "American Heart Association"
+  },
+  {
+    "id": "fever_management",
+    "title": "Fever Treatment",
+    "content_en": "Fever is your body's natural response to infection. Normal body temperature is around 98.6°F (37°C). A fever is generally considered 100.4°F (38°C) or higher. For mild fever, rest, fluids, and over-the-counter medications can help. Seek medical attention if fever exceeds 103°F (39.4°C) or persists for more than 3 days.",
+    "content_hi": "बुखार संक्रमण के लिए आपके शरीर की प्राकृतिक प्रतिक्रिया है। सामान्य शरीर का तापमान लगभग 98.6°F (37°C) होता है। बुखार आमतौर पर 100.4°F (38°C) या अधिक माना जाता है।",
+    "content_bn": "জ্বর হল সংক্রমণের বিরুদ্ধে আপনার শরীরের প্রাকৃতিক প্রতিক্রিয়া। স্বাভাবিক শরীরের তাপমাত্রা প্রায় ৯৮.৬°F (৩৭°C)। জ্বর সাধারণত ১০০.৪°F (৩৮°C) বা তার বেশি বলে বিবেচিত হয়।",
+    "keywords": ["fever", "temperature", "infection", "बुखार", "तापमान", "জ্বর", "তাপমাত্রা"],
+    "source": "Mayo Clinic"
+  },
+  {
+    "id": "common_cold",
+    "title": "Common Cold",
+    "content_en": "The common cold is a viral infection of your nose and throat. Symptoms include runny nose, sneezing, cough, and mild fever. Most colds resolve on their own within 7-10 days. Treatment focuses on symptom relief: rest, fluids, warm salt water gargles, and over-the-counter medications.",
+    "content_hi": "सामान्य सर्दी आपकी नाक और गले का एक वायरल संक्रमण है। लक्षणों में बहती नाक, छींकना, खांसी और हल्का बुखार शामिल है। अधिकांश सर्दी 7-10 दिनों के भीतर अपने आप ठीक हो जाती है।",
+    "content_bn": "সাধারণ সর্দি হল আপনার নাক এবং গলার একটি ভাইরাল সংক্রমণ। লক্ষণগুলির মধ্যে রয়েছে নাক দিয়ে পানি পড়া, হাঁচি, কাশি এবং হালকা জ্বর। বেশিরভাগ সর্দি ৭-১০ দিনের মধ্যে নিজে থেকেই সেরে যায়।",
+    "keywords": ["cold", "cough", "runny nose", "सर्दी", "खांसी", "সর্দি", "কাশি"],
+    "source": "CDC"
+  },
+  {
+    "id": "dehydration",
+    "title": "Dehydration Prevention",
+    "content_en": "Dehydration occurs when your body loses more fluids than it takes in. Signs include dry mouth, fatigue, dizziness, and dark urine. Mild dehydration can be treated by drinking water or oral rehydration solutions. Severe dehydration requires immediate medical attention.",
+    "content_hi": "निर्जलीकरण तब होता है जब आपका शरीर जितना तरल पदार्थ लेता है उससे अधिक खो देता है। संकेतों में सूखा मुंह, थकान, चक्कर आना और गहरे रंग का मूत्र शामिल है।",
+    "content_bn": "পানিশূন্যতা ঘটে যখন আপনার শরীর যতটা তরল গ্রহণ করে তার চেয়ে বেশি হারায়। লক্ষণগুলির মধ্যে রয়েছে শুকনো মুখ, ক্লান্তি, মাথা ঘোরা এবং গাঢ় প্রস্রাব।",
+    "keywords": ["dehydration", "fluids", "water", "निर्जलीकरण", "তরল", "পানি"],
+    "source": "WHO"
+  },
+  {
+    "id": "headache_relief",
+    "title": "Headache Management",
+    "content_en": "Headaches are common and can be caused by stress, dehydration, lack of sleep, or underlying conditions. Most headaches can be relieved with rest, hydration, and over-the-counter pain relievers. Seek medical attention for severe, sudden, or persistent headaches.",
+    "content_hi": "सिरदर्द आम है और तनाव, निर्जलीकरण, नींद की कमी, या अंतर्निहित स्थितियों के कारण हो सकता है। अधिकांश सिरदर्द आराम, हाइड्रेशन और ओवर-द-काउंटर दर्द निवारक से राहत मिल सकती है।",
+    "content_bn": "মাথাব্যথা সাধারণ এবং চাপ, পানিশূন্যতা, ঘুমের অভাব বা অন্তর্নিহিত অবস্থার কারণে হতে পারে। বেশিরভাগ মাথাব্যথা বিশ্রাম, হাইড্রেশন এবং ওভার-দ্য-কাউন্টার ব্যথানাশক দিয়ে উপশম করা যায়।",
+    "keywords": ["headache", "pain", "stress", "सिरदर्द", "दर्द", "মাথাব্যথা", "ব্যথা"],
+    "source": "National Institute of Health"
+  },
+  {
+    "id": "stomach_upset",
+    "title": "Stomach Problems",
+    "content_en": "Stomach upset can include nausea, vomiting, diarrhea, or abdominal pain. Common causes are food poisoning, viral infections, or dietary indiscretion. Treatment includes rest, clear fluids, and bland foods. Seek medical care if symptoms are severe or persist.",
+    "content_hi": "पेट की खराबी में मतली, उल्टी, दस्त, या पेट दर्द शामिल हो सकता है। सामान्य कारण खाद्य विषाक्तता, वायरल संक्रमण, या आहार संबंधी लापरवाही हैं।",
+    "content_bn": "পেটের সমস্যার মধ্যে বমি বমি ভাব, বমি, ডায়রিয়া বা পেটে ব্যথা অন্তর্ভুক্ত থাকতে পারে। সাধারণ কারণগুলি হল খাদ্য বিষক্রিয়া, ভাইরাল সংক্রমণ বা খাদ্যাভ্যাসের অসতর্কতা।",
+    "keywords": ["stomach", "nausea", "diarrhea", "पेट", "मतली", "পেট", "বমি"],
+    "source": "Mayo Clinic"
+  },
+  {
+    "id": "wound_care",
+    "title": "Basic Wound Care",
+    "content_en": "For minor cuts and scrapes: clean hands first, stop bleeding with gentle pressure, clean the wound with water, apply antibiotic ointment if available, and cover with a clean bandage. Change bandages daily and watch for signs of infection like increased redness, swelling, or pus.",
+    "content_hi": "छोटे कटने और खरोंच के लिए: पहले हाथ साफ करें, हल्के दबाव से खून बहना बंद करें, घाव को पानी से साफ करें, यदि उपलब्ध हो तो एंटीबायोटिक मरहम लगाएं।",
+    "content_bn": "ছোটখাটো কাটা এবং আঁচড়ের জন্য: প্রথমে হাত পরিষ্কার করুন, মৃদু চাপ দিয়ে রক্তপাত বন্ধ করুন, ক্ষতটি পানি দিয়ে পরিষ্কার করুন, উপলব্ধ থাকলে অ্যান্টিবায়োটিক মলম লাগান।",
+    "keywords": ["wound", "cut", "bandage", "घाव", "कटना", "ক্ষত", "কাটা"],
+    "source": "Red Cross"
+  }
+]

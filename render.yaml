@@ -1,0 +1,30 @@
+services:
+  # Main Dhanvantri application
+  - type: web
+    name: dhanvantri-app
+    env: docker
+    plan: standard  # Minimum for production workload
+    dockerfilePath: ./Dockerfile.render
+    envVars:
+      - key: OLLAMA_BASE
+        value: https://api.replicate.com/v1/models  # Use Replicate API as alternative
+      - key: WHISPER_BASE
+        value: http://localhost:5001
+      - key: LOG_LEVEL
+        value: INFO
+      - key: ENABLE_PRODUCTION_FEATURES
+        value: true
+      - key: MAX_CONCURRENT_REQUESTS
+        value: 25  # Conservative for Render
+      - key: REQUEST_TIMEOUT
+        value: 30
+      - key: MODEL_NAME
+        value: alibayram/medgemma:4b
+    healthCheckPath: /api/health
+    
+  # Optional: PostgreSQL for persistent storage
+  - type: pserv
+    name: dhanvantri-db
+    plan: starter
+    databaseName: dhanvantri
+    user: dhanvantri_user

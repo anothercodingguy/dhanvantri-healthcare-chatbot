@@ -1,0 +1,60 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Lotus base -->
+  <path d="M100 180 L85 170 L75 165 L70 155 L75 150 L85 155 L100 160 L115 155 L125 150 L130 155 L125 165 L115 170 L100 180 Z" stroke="white" stroke-width="2" fill="none"/>
+  <path d="M100 175 L90 168 L82 163 L78 158 L82 153 L90 158 L100 163 L110 158 L118 153 L122 158 L118 163 L110 168 L100 175 Z" stroke="white" stroke-width="1.5" fill="none"/>
+  
+  <!-- Additional lotus petals -->
+  <path d="M60 165 L70 155 L75 150 L85 155 L90 165" stroke="white" stroke-width="1.5" fill="none"/>
+  <path d="M140 165 L130 155 L125 150 L115 155 L110 165" stroke="white" stroke-width="1.5" fill="none"/>
+  <path d="M50 155 L65 150 L70 145 L75 150 L80 155" stroke="white" stroke-width="1.5" fill="none"/>
+  <path d="M150 155 L135 150 L130 145 L125 150 L120 155" stroke="white" stroke-width="1.5" fill="none"/>
+  
+  <!-- Main figure outline -->
+  <rect x="40" y="50" width="120" height="110" rx="15" stroke="white" stroke-width="2" fill="none"/>
+  
+  <!-- Head and crown -->
+  <circle cx="100" cy="75" r="15" stroke="white" stroke-width="2" fill="none"/>
+  <path d="M85 65 Q100 55 115 65" stroke="white" stroke-width="2" fill="none"/>
+  <path d="M90 62 Q100 58 110 62" stroke="white" stroke-width="1.5" fill="none"/>
+  <path d="M95 60 Q100 57 105 60" stroke="white" stroke-width="1" fill="none"/>
+  
+  <!-- Crown details -->
+  <path d="M100 55 L98 50 L100 48 L102 50 L100 55" stroke="white" stroke-width="1.5" fill="none"/>
+  <circle cx="100" cy="65" r="2" stroke="white" stroke-width="1" fill="none"/>
+  
+  <!-- Body and robes -->
+  <path d="M85 90 Q100 85 115 90 L115 140 Q100 145 85 140 L85 90" stroke="white" stroke-width="2" fill="none"/>
+  <path d="M90 95 Q100 92 110 95 L110 135 Q100 138 90 135 L90 95" stroke="white" stroke-width="1.5" fill="none"/>
+  
+  <!-- Arms -->
+  <!-- Left arm with medicine pot -->
+  <path d="M85 100 L70 95 L65 100 L70 110 L75 115" stroke="white" stroke-width="2" fill="none"/>
+  <circle cx="68" cy="108" r="4" stroke="white" stroke-width="1.5" fill="none"/>
+  <path d="M68 104 L68 100 L70 98 L72 100 L72 104" stroke="white" stroke-width="1" fill="none"/>
+  
+  <!-- Right arm with herb/flower -->
+  <path d="M115 100 L130 95 L135 100 L130 110 L125 115" stroke="white" stroke-width="2" fill="none"/>
+  <path d="M132 105 L135 102 L138 105 L135 108 L132 105" stroke="white" stroke-width="1.5" fill="none"/>
+  <path d="M130 108 L133 105 L136 108" stroke="white" stroke-width="1" fill="none"/>
+  
+  <!-- Lower arms in blessing pose -->
+  <path d="M90 120 L80 125 L75 130 L80 135" stroke="white" stroke-width="2" fill="none"/>
+  <path d="M110 120 L120 125 L125 130 L120 135" stroke="white" stroke-width="2" fill="none"/>
+  
+  <!-- Hands in mudra -->
+  <circle cx="78" cy="132" r="3" stroke="white" stroke-width="1.5" fill="none"/>
+  <circle cx="122" cy="132" r="3" stroke="white" stroke-width="1.5" fill="none"/>
+  
+  <!-- Legs in lotus position -->
+  <path d="M85 140 L75 150 L85 155 L100 150 L115 155 L125 150 L115 140" stroke="white" stroke-width="2" fill="none"/>
+  
+  <!-- Necklace and ornaments -->
+  <path d="M90 85 Q100 88 110 85" stroke="white" stroke-width="1.5" fill="none"/>
+  <circle cx="95" cy="87" r="1" stroke="white" stroke-width="1" fill="white"/>
+  <circle cx="100" cy="88" r="1" stroke="white" stroke-width="1" fill="white"/>
+  <circle cx="105" cy="87" r="1" stroke="white" stroke-width="1" fill="white"/>
+  
+  <!-- Halo/Aura -->
+  <circle cx="100" cy="75" r="25" stroke="white" stroke-width="1" fill="none" opacity="0.6"/>
+  <circle cx="100" cy="75" r="30" stroke="white" stroke-width="0.5" fill="none" opacity="0.4"/>
+</svg>
