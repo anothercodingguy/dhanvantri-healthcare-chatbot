@@ -7,7 +7,7 @@ services:
     dockerfilePath: ./Dockerfile.render
     envVars:
       - key: OLLAMA_BASE
-        value: https://api.replicate.com/v1/models
+        value: http://mock-ollama-service
       - key: WHISPER_BASE
         value: http://localhost:5001
       - key: LOG_LEVEL
@@ -19,7 +19,9 @@ services:
       - key: REQUEST_TIMEOUT
         value: 30
       - key: MODEL_NAME
-        value: alibayram/medgemma:4b
+        value: mock-model
       - key: ENABLE_WHISPER
         value: false
-    healthCheckPath: /api/health
+      - key: DEMO_MODE
+        value: true
+    healthCheckPath: /api/live

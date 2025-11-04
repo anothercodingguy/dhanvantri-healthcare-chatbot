@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     enable_translation: bool = True
     enable_medical_disclaimer: bool = True
     enable_emergency_detection: bool = True
+    demo_mode: bool = os.getenv("DEMO_MODE", "false").lower() == "true"
     
     # Model Configuration
     model_temperature: float = 0.7

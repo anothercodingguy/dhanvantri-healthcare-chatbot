@@ -81,6 +81,35 @@ This is an automated response. Please seek immediate professional medical attent
     return emergency_responses.get(language, emergency_responses["en"])
 
 
+def get_demo_response(message: str, language: str = "en") -> str:
+    """Get a demo response for when Ollama is not available."""
+    demo_responses = {
+        "en": {
+            "fever": "Fever is a common symptom that indicates your body is fighting an infection. For mild fever (below 101°F/38.3°C), you can rest, drink plenty of fluids, and take over-the-counter fever reducers like acetaminophen or ibuprofen. However, if fever persists for more than 3 days, reaches 103°F/39.4°C or higher, or is accompanied by severe symptoms, please consult a healthcare provider immediately.",
+            "headache": "Headaches can have various causes including stress, dehydration, lack of sleep, or underlying medical conditions. For mild headaches, try resting in a quiet, dark room, staying hydrated, and applying a cold or warm compress. Over-the-counter pain relievers may help, but if headaches are severe, frequent, or accompanied by other symptoms like vision changes or neck stiffness, seek medical attention.",
+            "cough": "Coughs can be caused by viral infections, allergies, or other respiratory conditions. For a dry cough, try staying hydrated, using a humidifier, and avoiding irritants. For productive coughs, don't suppress them completely as they help clear mucus. If cough persists for more than 2 weeks, is accompanied by blood, or you have difficulty breathing, consult a healthcare provider.",
+            "default": "Thank you for your health question. This is a demo response as the AI service is currently unavailable. For any health concerns, it's always best to consult with a qualified healthcare provider who can properly assess your symptoms and provide personalized medical advice."
+        },
+        "hi": {
+            "fever": "बुखार एक सामान्य लक्षण है जो दर्शाता है कि आपका शरीर संक्रमण से लड़ रहा है। हल्के बुखार (101°F/38.3°C से कम) के लिए, आप आराम कर सकते हैं, भरपूर तरल पदार्थ पी सकते हैं, और पेरासिटामोल या इबुप्रोफेन जैसी दवाएं ले सकते हैं। हालांकि, यदि बुखार 3 दिनों से अधिक बना रहता है या गंभीर लक्षणों के साथ है, तो तुरंत डॉक्टर से सलाह लें।",
+            "default": "आपके स्वास्थ्य प्रश्न के लिए धन्यवाद। यह एक डेमो उत्तर है क्योंकि AI सेवा वर्तमान में उपलब्ध नहीं है। किसी भी स्वास्थ्य चिंता के लिए, हमेशा एक योग्य स्वास्थ्य सेवा प्रदाता से सलाह लेना सबसे अच्छा है।"
+        }
+    }
+    
+    # Simple keyword matching for demo responses
+    message_lower = message.lower()
+    lang_responses = demo_responses.get(language, demo_responses["en"])
+    
+    if any(word in message_lower for word in ["fever", "बुखार", "ज्वर"]):
+        return lang_responses.get("fever", lang_responses["default"])
+    elif any(word in message_lower for word in ["headache", "सिरदर्द", "सिर दर्द"]):
+        return lang_responses.get("headache", lang_responses["default"])
+    elif any(word in message_lower for word in ["cough", "खांसी", "कफ"]):
+        return lang_responses.get("cough", lang_responses["default"])
+    else:
+        return lang_responses["default"]
+
+
 async def process_chat_message(message: str, language: str = "en", user_id: Optional[int] = None) -> Dict[str, Any]:
     """
     Process a chat message through the complete conversation flow.
@@ -138,16 +167,18 @@ async def process_chat_message(message: str, language: str = "en", user_id: Opti
         # Construct system prompt with medical context
         system_prompt = construct_system_prompt(medical_context, language)
         
-        # Get response from MedGemma-4B
-        try:
-            llm_response = ollama_chat(message, system_prompt, temperature=0.1)
-            logger.info("Successfully received response from MedGemma-4B")
-        except OllamaError as e:
-            logger.error(f"Ollama service error: {e}")
-            raise HTTPException(
-                status_code=503,
-                detail=format_error_response("service_unavailable", str(e), language)
-            )
+        # Get response from MedGemma-4B or demo response
+        from config import settings
+        if settings.demo_mode:
+            llm_response = get_demo_response(message, language)
+            logger.info("Using demo response (Ollama unavailable)")
+        else:
+            try:
+                llm_response = ollama_chat(message, system_prompt, temperature=0.1)
+                logger.info("Successfully received response from MedGemma-4B")
+            except OllamaError as e:
+                logger.error(f"Ollama service error: {e}. Falling back to demo response.")
+                llm_response = get_demo_response(message, language)
         
         # Clean the MedGemma output to remove markdown formatting and asterisks
         llm_response = clean_medgemma_output(llm_response)

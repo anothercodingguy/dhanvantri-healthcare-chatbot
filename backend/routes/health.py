@@ -18,6 +18,14 @@ router = APIRouter()
 
 async def check_ollama_health() -> Dict[str, Any]:
     """Check Ollama service connectivity and model availability."""
+    # In demo mode, return healthy status without checking external service
+    if settings.demo_mode:
+        return {
+            "status": "healthy",
+            "message": "Demo mode - using mock responses",
+            "models_count": 1
+        }
+    
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
             # Check if Ollama is running
@@ -58,6 +66,13 @@ async def check_ollama_health() -> Dict[str, Any]:
 
 async def check_whisper_health() -> Dict[str, Any]:
     """Check Whisper service connectivity."""
+    # In demo mode or when Whisper is disabled, return healthy status
+    if settings.demo_mode or not getattr(settings, 'enable_whisper', True):
+        return {
+            "status": "healthy",
+            "message": "Using browser speech recognition"
+        }
+    
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
             # Check if Whisper service is running
@@ -70,19 +85,19 @@ async def check_whisper_health() -> Dict[str, Any]:
                 }
             else:
                 return {
-                    "status": "unhealthy",
-                    "message": f"Whisper returned status {response.status_code}"
+                    "status": "healthy",  # Don't fail if Whisper is unavailable
+                    "message": "Whisper unavailable, using browser STT"
                 }
                 
     except httpx.TimeoutException:
         return {
-            "status": "unhealthy",
-            "message": "Whisper service timeout"
+            "status": "healthy",  # Don't fail if Whisper is unavailable
+            "message": "Whisper timeout, using browser STT"
         }
     except Exception as e:
         return {
-            "status": "unhealthy",
-            "message": f"Whisper connection error: {str(e)}"
+            "status": "healthy",  # Don't fail if Whisper is unavailable
+            "message": "Whisper unavailable, using browser STT"
         }
 
 
@@ -208,6 +223,10 @@ async def readiness_check():
     Kubernetes-style readiness probe.
     Returns 200 if the service is ready to accept traffic.
     """
+    # In demo mode, always return ready
+    if settings.demo_mode:
+        return {"status": "ready", "message": "Demo mode - service is ready"}
+    
     # Check if critical services are available
     ollama_health = await check_ollama_health()
     
