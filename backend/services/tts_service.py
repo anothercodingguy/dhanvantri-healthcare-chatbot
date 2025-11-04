@@ -1,4 +1,4 @@
-"""Text-to-Speech service for multilingual audio generation using gTTS and Google Translate.
+"""Text-to-Speech service for multilingual audio generation using gTTS.
 Supports English, Hindi, Kannada, Bengali, and Bhojpuri."""
 
 import logging
@@ -7,7 +7,6 @@ import base64
 import tempfile
 from typing import Optional, Dict
 from gtts import gTTS
-from googletrans import Translator
 import io
 
 # Configure logging
@@ -15,12 +14,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class TTSService:
-    """Text-to-Speech service using Google Translate and gTTS for multilingual support."""
+    """Text-to-Speech service using gTTS for multilingual support."""
     
     def __init__(self):
         """Initializes the service."""
         try:
-            self.translator = Translator()
             logger.info("TTS Service initialized successfully.")
         except Exception as e:
             logger.error(f"Failed to initialize TTS Service: {e}")
@@ -28,47 +26,18 @@ class TTSService:
 
         # Language code mapping for gTTS
         self.language_map = {
-            'en-US': {'name': 'English', 'gtts_code': 'en', 'trans_code': 'en'},
-            'bn-IN': {'name': 'Bengali', 'gtts_code': 'bn', 'trans_code': 'bn'}, 
-            'bho-IN': {'name': 'Bhojpuri', 'gtts_code': 'hi', 'trans_code': 'hi'},  # Use Hindi for Bhojpuri
-            'hi-IN': {'name': 'Hindi', 'gtts_code': 'hi', 'trans_code': 'hi'},
-            'kn-IN': {'name': 'Kannada', 'gtts_code': 'kn', 'trans_code': 'kn'}
+            'en-US': {'name': 'English', 'gtts_code': 'en'},
+            'bn-IN': {'name': 'Bengali', 'gtts_code': 'bn'}, 
+            'bho-IN': {'name': 'Bhojpuri', 'gtts_code': 'hi'},  # Use Hindi for Bhojpuri
+            'hi-IN': {'name': 'Hindi', 'gtts_code': 'hi'},
+            'kn-IN': {'name': 'Kannada', 'gtts_code': 'kn'}
         }
 
     def translate_text(self, text: str, language_code: str) -> str:
-        """Translates English text to the target language using Google Translate."""
-        try:
-            lang_info = self.language_map.get(language_code)
-            if not lang_info:
-                logger.warning(f"Unsupported language code: {language_code}. Falling back to English.")
-                return text
-
-            if language_code == 'en-US':
-                return text  # No translation needed for English
-
-            trans_code = lang_info['trans_code']
-            language_name = lang_info['name']
-            
-            logger.info(f"Translating to {language_name}...")
-            
-            # Retry translation with error handling
-            for attempt in range(3):
-                try:
-                    translated = self.translator.translate(text, src='en', dest=trans_code)
-                    if translated and translated.text:
-                        logger.info(f"Successfully translated text: {translated.text[:50]}...")
-                        return translated.text
-                except Exception as e:
-                    logger.warning(f"Translation attempt {attempt + 1} failed: {e}")
-                    if attempt == 2:  # Last attempt
-                        break
-            
-            logger.error(f"All translation attempts failed for {language_code}")
-            return text  # Return original text as fallback
-            
-        except Exception as e:
-            logger.error(f"Translation failed for language code {language_code}: {e}")
-            return text
+        """Returns the text as-is since translation is handled by the frontend."""
+        # For the free deployment, we assume text is already in the correct language
+        # Translation can be handled by the frontend or external services
+        return text
 
     def generate_speech(self, text_to_speak: str, language_code: str = "en-US") -> Optional[str]:
         """Generates speech audio from text in the specified language.
@@ -86,13 +55,11 @@ class TTSService:
                 logger.error(f"Unsupported language code: {language_code}")
                 return None
 
-            # Step 1: Translate the text if necessary
+            # Use the text as-is (translation handled by frontend)
             translated_text = text_to_speak
-            if language_code != 'en-US':
-                translated_text = self.translate_text(text_to_speak, language_code)
-                if not translated_text:
-                    logger.error("Text for speech synthesis is empty after translation.")
-                    return None
+            if not translated_text:
+                logger.error("Text for speech synthesis is empty.")
+                return None
 
             logger.info(f"Generating TTS for language {language_code}.")
             logger.info(f"Text to synthesize: {translated_text[:100]}...")
