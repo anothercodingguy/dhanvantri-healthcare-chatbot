@@ -11,7 +11,9 @@ from typing import Dict, Any
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 import uvicorn
+import os
 
 from config import settings
 from data.in_memory import initialize_storage
@@ -77,6 +79,14 @@ app.add_middleware(
 app.include_router(health_router, prefix="/api", tags=["health"])
 app.include_router(chat_router, prefix="/api", tags=["chat"])
 app.include_router(news_router, prefix="/api", tags=["news"])
+
+# Serve frontend static files
+frontend_dist_path = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
+if os.path.exists(frontend_dist_path):
+    app.mount("/", StaticFiles(directory=frontend_dist_path, html=True), name="frontend")
+    logger.info(f"Serving frontend from: {frontend_dist_path}")
+else:
+    logger.warning(f"Frontend dist directory not found: {frontend_dist_path}")
 
 
 @app.exception_handler(Exception)
