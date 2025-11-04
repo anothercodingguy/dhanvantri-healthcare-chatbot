@@ -3,7 +3,7 @@ services:
   - type: web
     name: dhanvantri-app
     env: docker
-    plan: standard
+    plan: free
     dockerfilePath: ./Dockerfile.render
     envVars:
       - key: OLLAMA_BASE
@@ -13,11 +13,13 @@ services:
       - key: LOG_LEVEL
         value: INFO
       - key: ENABLE_PRODUCTION_FEATURES
-        value: true
+        value: false
       - key: MAX_CONCURRENT_REQUESTS
-        value: 25
+        value: 10
       - key: REQUEST_TIMEOUT
         value: 30
       - key: MODEL_NAME
         value: alibayram/medgemma:4b
+      - key: ENABLE_WHISPER
+        value: false
     healthCheckPath: /api/health
