@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from services.groq_client import groq_client, GroqServiceError
-from services.edge_tts_service import edge_tts_service as tts_service
+# from services.tts_service import tts_service # Moved to client-side
 from data.in_memory import get_storage
 from utils.utils import (
     append_medical_disclaimer,
@@ -490,41 +490,20 @@ async def text_to_speech_endpoint(request: TTSRequest):
     Text-to-Speech endpoint.
     """
     try:
-        logger.info(f"Received TTS request for language: {request.language}")
+    try:
+        logger.info(f"Received TTS request for language: {request.language} (DEPRECATED - Should use Client Side)")
         
-        # Try direct TTS first
-        audio_base64 = await tts_service.generate_speech_direct_async(request.text, request.language)
-        
-        if audio_base64 is None and request.language != "en":
-             # Fallback logic if needed, but generate_speech_direct_async should handle it
-             pass
-
-        # NOTE: I need to update TTSService to support async and run_in_executor
-        # For now I will assume I updated it to have 'generate_speech_direct_async'
-        # Or I will wrap it here? Better to update the service.
-        # I will update the service next. For now, calling the non-async method will block.
-        # I will change this call to await tts_service.generate_speech_async(request.text, request.language)
-        
-        # Let's use the blocking one for this write and then fix service to be async?
-        # No, I should fix the service first or effectively use run_in_executor here.
-        # But I haven't fixed the service yet.
-        # I will write correct async code here assuming I fix the service in the next step.
-        audio_base64 = await tts_service.generate_speech_async(request.text, request.language)
-        
-        if audio_base64 is None:
-            raise HTTPException(
-                status_code=503,
-                detail=f"TTS generation failed for language {request.language}"
-            )
+        # We now rely on Client-Side TTS. This endpoint remains for compatibility but returns empty.
         
         return JSONResponse(
             status_code=200,
             content={
-                "audio": audio_base64,
+                "audio": "", 
                 "language": request.language,
                 "text": request.text,
-                "format": "mp3",
-                "encoding": "base64"
+                "format": "mp3", 
+                "encoding": "base64",
+                "message": "TTS is now handled client-side."
             }
         )
         
@@ -537,54 +516,8 @@ async def text_to_speech_endpoint(request: TTSRequest):
 
 @router.get("/chat/tts/languages")
 async def get_tts_languages():
-    """
-    Get supported TTS languages.
-    """
-    try:
-        languages = tts_service.get_supported_languages()
-        return JSONResponse(
-            status_code=200,
-            content={
-                "supported_languages": languages,
-                "total_languages": len(languages)
-            }
-        )
-        
-    except Exception as e:
-        logger.error(f"Error getting TTS languages: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get supported languages")
-
+    return JSONResponse(status_code=200, content={"supported_languages": {}, "message": "Client-side TTS"})
 
 @router.post("/chat/tts/direct")
 async def text_to_speech_direct_endpoint(request: TTSRequest):
-    """
-    Direct Text-to-Speech endpoint.
-    """
-    try:
-        logger.info(f"Received direct TTS request for language: {request.language}")
-        
-        audio_base64 = await tts_service.generate_speech_async(request.text, request.language)
-        
-        if audio_base64 is None:
-            raise HTTPException(
-                status_code=503,
-                detail=f"Direct TTS generation failed for language {request.language}"
-            )
-        
-        return JSONResponse(
-            status_code=200,
-            content={
-                "audio": audio_base64,
-                "language": request.language,
-                "text": request.text,
-                "format": "mp3",
-                "encoding": "base64",
-                "method": "direct"
-            }
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Direct TTS endpoint error: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Direct TTS service error")
+    return JSONResponse(status_code=200, content={"message": "Use client,Side TTS"})

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 // Voice controls integrated directly into the chat input
 import './App.css';
 import NewsModal from './NewsModal';
+import { voiceManager } from './utils/VoiceManager';
 
 const SUPPORTED_LANGUAGES = {
   'en': 'English',
@@ -236,69 +237,14 @@ function App() {
     }
   };
 
-  // Text-to-Speech function using backend TTS service
+  // Client-Side TTS using VoiceManager
   const speakText = async (text, language = selectedLanguage) => {
     try {
-      setIsLoading(true);
-
-      const response = await fetch('/api/chat/tts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text: text,
-          language: language
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`TTS request failed: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      // Convert base64 audio to blob and play
-      const audioBytes = atob(data.audio);
-      const audioArray = new Uint8Array(audioBytes.length);
-      for (let i = 0; i < audioBytes.length; i++) {
-        audioArray[i] = audioBytes.charCodeAt(i);
-      }
-
-      const audioBlob = new Blob([audioArray], { type: 'audio/mpeg' });
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-
-      audio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
-      };
-
-      await audio.play();
-
+      if (!text) return;
+      await voiceManager.speak(text, language);
     } catch (err) {
       console.error('TTS error:', err);
-      setError(`TTS failed: ${err.message}`);
-
-      // Fallback to browser TTS
-      if ('speechSynthesis' in window) {
-        const speechLanguageCodes = {
-          'en': 'en-US',
-          'hi': 'hi-IN',
-          'bn': 'bn-IN',
-          'bho': 'hi-IN',
-          'kn': 'kn-IN'
-        };
-
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = speechLanguageCodes[language] || 'en-US';
-        utterance.rate = 0.9;
-        utterance.pitch = 1;
-        utterance.volume = 1;
-
-        window.speechSynthesis.speak(utterance);
-      }
-    } finally {
-      setIsLoading(false);
+      // Fail silently or show toast, but valid client-side speech shouldn't fail often
     }
   };
 
