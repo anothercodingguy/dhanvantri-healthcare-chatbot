@@ -47,6 +47,10 @@ class GroqClient:
             
             messages.append({"role": "user", "content": prompt})
             
+            if self.model_name == "mock-model":
+                logger.warning("Detected 'mock-model' in client. Forcing switch to llama-3.3-70b-versatile.")
+                self.model_name = "llama-3.3-70b-versatile"
+
             logger.info(f"Sending chat request to Groq (Model: {self.model_name})")
             
             completion = await self.client.chat.completions.create(

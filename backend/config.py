@@ -8,16 +8,21 @@ from typing import List, Optional
 import os
 
 
+from pydantic import field_validator
+
 class Settings(BaseSettings):
     """Application settings with environment variable support."""
     
     # Groq Configuration
     groq_api_key: Optional[str] = os.getenv("GROQ_API_KEY")
-    # If MODEL_NAME is set to "mock-model" by accident (Render default?), override it.
-    model_name: str = os.getenv("MODEL_NAME", "llama-3.3-70b-versatile")
-    if model_name == "mock-model":
-        model_name = "llama-3.3-70b-versatile"
+    model_name: str = "llama-3.3-70b-versatile"
     stt_model: str = "whisper-large-v3" # Multilingual support
+
+    @field_validator("model_name")
+    def validate_model_name(cls, v):
+        if v == "mock-model":
+            return "llama-3.3-70b-versatile"
+        return v
     
     # Application Configuration
     port: int = int(os.getenv("PORT", "8000"))  # Render sets PORT env var
