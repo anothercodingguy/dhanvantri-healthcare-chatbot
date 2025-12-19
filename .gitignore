@@ -65,7 +65,7 @@ temp/
 
 # Local development files
 test_*.py
-verify_*.py
+
 
 # SSL certificates (if any)
 ssl/

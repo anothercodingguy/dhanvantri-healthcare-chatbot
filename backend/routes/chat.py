@@ -10,9 +10,8 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from services.ollama_client import ollama_chat, OllamaError
-from services.whisper_client import whisper_client, WhisperError
-from services.tts_service import tts_service
+from services.groq_client import groq_client, GroqServiceError
+from services.edge_tts_service import edge_tts_service as tts_service
 from data.in_memory import get_storage
 from utils.utils import (
     append_medical_disclaimer,
@@ -81,35 +80,6 @@ This is an automated response. Please seek immediate professional medical attent
     return emergency_responses.get(language, emergency_responses["en"])
 
 
-def get_demo_response(message: str, language: str = "en") -> str:
-    """Get a demo response for when Ollama is not available."""
-    demo_responses = {
-        "en": {
-            "fever": "Fever is a common symptom that indicates your body is fighting an infection. For mild fever (below 101°F/38.3°C), you can rest, drink plenty of fluids, and take over-the-counter fever reducers like acetaminophen or ibuprofen. However, if fever persists for more than 3 days, reaches 103°F/39.4°C or higher, or is accompanied by severe symptoms, please consult a healthcare provider immediately.",
-            "headache": "Headaches can have various causes including stress, dehydration, lack of sleep, or underlying medical conditions. For mild headaches, try resting in a quiet, dark room, staying hydrated, and applying a cold or warm compress. Over-the-counter pain relievers may help, but if headaches are severe, frequent, or accompanied by other symptoms like vision changes or neck stiffness, seek medical attention.",
-            "cough": "Coughs can be caused by viral infections, allergies, or other respiratory conditions. For a dry cough, try staying hydrated, using a humidifier, and avoiding irritants. For productive coughs, don't suppress them completely as they help clear mucus. If cough persists for more than 2 weeks, is accompanied by blood, or you have difficulty breathing, consult a healthcare provider.",
-            "default": "Thank you for your health question. This is a demo response as the AI service is currently unavailable. For any health concerns, it's always best to consult with a qualified healthcare provider who can properly assess your symptoms and provide personalized medical advice."
-        },
-        "hi": {
-            "fever": "बुखार एक सामान्य लक्षण है जो दर्शाता है कि आपका शरीर संक्रमण से लड़ रहा है। हल्के बुखार (101°F/38.3°C से कम) के लिए, आप आराम कर सकते हैं, भरपूर तरल पदार्थ पी सकते हैं, और पेरासिटामोल या इबुप्रोफेन जैसी दवाएं ले सकते हैं। हालांकि, यदि बुखार 3 दिनों से अधिक बना रहता है या गंभीर लक्षणों के साथ है, तो तुरंत डॉक्टर से सलाह लें।",
-            "default": "आपके स्वास्थ्य प्रश्न के लिए धन्यवाद। यह एक डेमो उत्तर है क्योंकि AI सेवा वर्तमान में उपलब्ध नहीं है। किसी भी स्वास्थ्य चिंता के लिए, हमेशा एक योग्य स्वास्थ्य सेवा प्रदाता से सलाह लेना सबसे अच्छा है।"
-        }
-    }
-    
-    # Simple keyword matching for demo responses
-    message_lower = message.lower()
-    lang_responses = demo_responses.get(language, demo_responses["en"])
-    
-    if any(word in message_lower for word in ["fever", "बुखार", "ज्वर"]):
-        return lang_responses.get("fever", lang_responses["default"])
-    elif any(word in message_lower for word in ["headache", "सिरदर्द", "सिर दर्द"]):
-        return lang_responses.get("headache", lang_responses["default"])
-    elif any(word in message_lower for word in ["cough", "खांसी", "कफ"]):
-        return lang_responses.get("cough", lang_responses["default"])
-    else:
-        return lang_responses["default"]
-
-
 async def process_chat_message(message: str, language: str = "en", user_id: Optional[int] = None) -> Dict[str, Any]:
     """
     Process a chat message through the complete conversation flow.
@@ -158,38 +128,32 @@ async def process_chat_message(message: str, language: str = "en", user_id: Opti
         
         if language != "en":
             try:
-                message = whisper_client.translate_text(message, language, "en")
+                message = await groq_client.translate(message, language, "en")
                 logger.info(f"Translated message from {language} to English")
-            except WhisperError as e:
+            except Exception as e:
                 logger.warning(f"Translation failed: {e}. Proceeding with original message.")
                 translation_unavailable = True
         
         # Construct system prompt with medical context
         system_prompt = construct_system_prompt(medical_context, language)
         
-        # Get response from MedGemma-4B or demo response
-        from config import settings
-        if settings.demo_mode:
-            llm_response = get_demo_response(message, language)
-            logger.info("Using demo response (Ollama unavailable)")
-        else:
-            try:
-                llm_response = ollama_chat(message, system_prompt, temperature=0.1)
-                logger.info("Successfully received response from MedGemma-4B")
-            except OllamaError as e:
-                logger.error(f"Ollama service error: {e}. Falling back to demo response.")
-                llm_response = get_demo_response(message, language)
+        # Get response from Groq
+        try:
+            llm_response = await groq_client.chat(message, system_prompt, temperature=0.1)
+            logger.info("Successfully received response from Groq")
+        except Exception as e:
+            logger.error(f"Groq service error: {e}")
+            llm_response = "I apologize, but I am currently unable to process your request. Please try again later."
         
-        # Clean the MedGemma output to remove markdown formatting and asterisks
+        # Clean the output (reusing medgemma cleaning as it general cleaning)
         llm_response = clean_medgemma_output(llm_response)
-        logger.info("Cleaned MedGemma output formatting")
         
         # Translate response back to user's language if needed
         if language != "en" and not translation_unavailable:
             try:
-                llm_response = whisper_client.translate_text(llm_response, "en", language)
+                llm_response = await groq_client.translate(llm_response, "en", language)
                 logger.info(f"Translated response back to {language}")
-            except WhisperError as e:
+            except Exception as e:
                 logger.warning(f"Response translation failed: {e}. Returning English response.")
                 translation_unavailable = True
         
@@ -229,9 +193,6 @@ async def process_chat_message(message: str, language: str = "en", user_id: Opti
 async def chat_endpoint(request: ChatRequest):
     """
     Text-based chat endpoint.
-    
-    Processes user messages and returns AI responses with medical information.
-    Supports multilingual conversations and includes medical disclaimers.
     """
     try:
         logger.info(f"Received chat request in language: {request.language}")
@@ -259,9 +220,6 @@ async def chat_audio_endpoint(
 ):
     """
     Audio-based chat endpoint.
-    
-    Accepts audio files, transcribes them using Whisper, processes the message,
-    and returns both text and audio responses.
     """
     try:
         logger.info(f"Received audio chat request in language: {language}")
@@ -281,11 +239,11 @@ async def chat_audio_endpoint(
                 detail=format_error_response("invalid_input", "Empty audio file", language)
             )
         
-        # Transcribe audio using Whisper
+        # Transcribe audio using Groq
         try:
-            transcription_result = whisper_client.transcribe_audio_bytes(audio_bytes, language)
+            transcription_result = await groq_client.transcribe_audio(audio_bytes, language)
             transcribed_text = transcription_result["text"]
-            detected_language = transcription_result["language"]
+            detected_language = transcription_result.get("language", language)
             
             logger.info(f"Successfully transcribed audio. Detected language: {detected_language}")
             
@@ -295,7 +253,7 @@ async def chat_audio_endpoint(
                     detail=format_error_response("invalid_input", "No speech detected in audio", language)
                 )
                 
-        except WhisperError as e:
+        except GroqServiceError as e:
             logger.error(f"Audio transcription failed: {e}")
             raise HTTPException(
                 status_code=503,
@@ -329,8 +287,6 @@ async def chat_audio_endpoint(
 async def chat_audio_base64_endpoint(request: dict):
     """
     Audio chat endpoint accepting base64-encoded audio data.
-    
-    Useful for frontend applications that capture audio and encode it as base64.
     """
     try:
         # Extract parameters
@@ -348,9 +304,9 @@ async def chat_audio_base64_endpoint(request: dict):
         
         # Transcribe base64 audio
         try:
-            transcription_result = whisper_client.transcribe_base64_audio(audio_base64, language)
+            transcription_result = await groq_client.transcribe_base64_audio(audio_base64, language)
             transcribed_text = transcription_result["text"]
-            detected_language = transcription_result["language"]
+            detected_language = transcription_result.get("language", language)
             
             logger.info(f"Successfully transcribed base64 audio. Detected language: {detected_language}")
             
@@ -360,7 +316,7 @@ async def chat_audio_base64_endpoint(request: dict):
                     detail=format_error_response("invalid_input", "No speech detected in audio", language)
                 )
                 
-        except WhisperError as e:
+        except GroqServiceError as e:
             logger.error(f"Base64 audio transcription failed: {e}")
             raise HTTPException(
                 status_code=503,
@@ -394,13 +350,6 @@ async def chat_audio_base64_endpoint(request: dict):
 async def get_chat_history(user_id: Optional[int] = None, limit: int = 50):
     """
     Get chat history for a user or all users.
-    
-    Args:
-        user_id: Optional user ID to filter history
-        limit: Maximum number of messages to return
-        
-    Returns:
-        List of chat messages
     """
     try:
         storage = get_storage()
@@ -433,9 +382,12 @@ async def get_chat_history(user_id: Optional[int] = None, limit: int = 50):
 @router.post("/chat/image")
 async def chat_image_endpoint(request: dict):
     """
-    Image analysis endpoint for medical images.
-    
-    Accepts base64-encoded images and provides medical analysis using MedGemma.
+    Image analysis endpoint (Mocked via Groq Llama Vision if available, or just keeping the existing mock).
+    Actually, Groq has Llama 3.2 Vision. 
+    But for now, I will keep the fracture prompt logic but route it to Groq if the model supports it.
+    The current prompt is just text based fracture prompt.
+    Existing logic: "Tell MedGemma it's a bone fracture".
+    I will update it to call Groq instead of MedGemma.
     """
     try:
         # Extract parameters
@@ -453,7 +405,12 @@ async def chat_image_endpoint(request: dict):
         
         logger.info(f"Received image analysis request for {filename} in language: {language}")
         
-        # Tell MedGemma it's a bone fracture for any uploaded image
+        # NOTE: Groq's Llama 3.2 11b/90b supports vision.
+        # Check if we should switch model for this request.
+        # For now, I will stick to the existing "Pretend it's a fracture" prompt logic as requested by user logic previously?
+        # Actually the code says: "Tell MedGemma it's a bone fracture for any uploaded image".
+        # This seems like a placeholder or specific demo feature. I will preserve it but use Groq.
+        
         fracture_prompt = """
 A patient has uploaded an X-ray image showing a bone fracture. Please provide educational information about bone fractures, including:
 
@@ -469,14 +426,14 @@ A patient has uploaded an X-ray image showing a bone fracture. Please provide ed
 Please provide comprehensive educational information about bone fractures.
 """
         
-        # Process through MedGemma
+        # Process through Groq
         try:
             result = await process_chat_message(
                 message=fracture_prompt,
                 language=language,
                 user_id=user_id
             )
-            logger.info("Successfully processed bone fracture education through MedGemma")
+            logger.info("Successfully processed bone fracture education through Groq")
         except Exception as e:
             logger.error(f"Error processing fracture education: {e}")
             result = {
@@ -513,7 +470,6 @@ Please provide comprehensive educational information about bone fractures.
 async def clear_chat_history():
     """
     Clear all chat history.
-    Useful for testing and privacy management.
     """
     try:
         storage = get_storage()
@@ -531,21 +487,28 @@ async def clear_chat_history():
 async def text_to_speech_endpoint(request: TTSRequest):
     """
     Text-to-Speech endpoint.
-    
-    Converts text to speech audio in the specified language.
-    Returns base64-encoded audio data.
     """
     try:
         logger.info(f"Received TTS request for language: {request.language}")
-        logger.info(f"Text length: {len(request.text)} characters")
         
-        # Try direct TTS first (better quality for native text)
-        audio_base64 = tts_service.generate_speech_direct(request.text, request.language)
+        # Try direct TTS first
+        audio_base64 = await tts_service.generate_speech_direct_async(request.text, request.language)
         
-        # If direct TTS fails, try with translation
         if audio_base64 is None and request.language != "en":
-            logger.info(f"Direct TTS failed, trying with translation for {request.language}")
-            audio_base64 = tts_service.generate_speech(request.text, request.language)
+             # Fallback logic if needed, but generate_speech_direct_async should handle it
+             pass
+
+        # NOTE: I need to update TTSService to support async and run_in_executor
+        # For now I will assume I updated it to have 'generate_speech_direct_async'
+        # Or I will wrap it here? Better to update the service.
+        # I will update the service next. For now, calling the non-async method will block.
+        # I will change this call to await tts_service.generate_speech_async(request.text, request.language)
+        
+        # Let's use the blocking one for this write and then fix service to be async?
+        # No, I should fix the service first or effectively use run_in_executor here.
+        # But I haven't fixed the service yet.
+        # I will write correct async code here assuming I fix the service in the next step.
+        audio_base64 = await tts_service.generate_speech_async(request.text, request.language)
         
         if audio_base64 is None:
             raise HTTPException(
@@ -575,8 +538,6 @@ async def text_to_speech_endpoint(request: TTSRequest):
 async def get_tts_languages():
     """
     Get supported TTS languages.
-    
-    Returns a list of supported languages for text-to-speech.
     """
     try:
         languages = tts_service.get_supported_languages()
@@ -596,17 +557,12 @@ async def get_tts_languages():
 @router.post("/chat/tts/direct")
 async def text_to_speech_direct_endpoint(request: TTSRequest):
     """
-    Direct Text-to-Speech endpoint (no translation).
-    
-    Converts text to speech audio directly in the specified language.
-    Use this for native text that doesn't need translation.
+    Direct Text-to-Speech endpoint.
     """
     try:
         logger.info(f"Received direct TTS request for language: {request.language}")
-        logger.info(f"Text length: {len(request.text)} characters")
         
-        # Generate speech audio directly
-        audio_base64 = tts_service.generate_speech_direct(request.text, request.language)
+        audio_base64 = await tts_service.generate_speech_async(request.text, request.language)
         
         if audio_base64 is None:
             raise HTTPException(

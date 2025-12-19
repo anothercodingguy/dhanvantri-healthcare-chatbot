@@ -3,6 +3,21 @@
 # Dhanvantri Services Startup Script
 echo "🏥 Starting Dhanvantri Healthcare Chatbot Services..."
 
+# Check prerequisites
+echo "Checking prerequisites..."
+
+# Check Python
+if ! command -v python3 &> /dev/null; then
+    echo "❌ Python3 is required but not installed"
+    exit 1
+fi
+
+# Check Node.js
+if ! command -v node &> /dev/null; then
+    echo "❌ Node.js is required but not installed"
+    exit 1
+fi
+
 # Function to check if a port is in use
 check_port() {
     if lsof -Pi :$1 -sTCP:LISTEN -t >/dev/null ; then
@@ -47,46 +62,9 @@ start_service() {
     fi
 }
 
-# Check prerequisites
-echo "Checking prerequisites..."
-
-# Check Python
-if ! command -v python3 &> /dev/null; then
-    echo "❌ Python3 is required but not installed"
-    exit 1
-fi
-
-# Check Node.js
-if ! command -v node &> /dev/null; then
-    echo "❌ Node.js is required but not installed"
-    exit 1
-fi
-
-# Check if required directories exist
-if [ ! -d "backend" ]; then
-    echo "❌ Backend directory not found"
-    exit 1
-fi
-
-if [ ! -d "frontend" ]; then
-    echo "❌ Frontend directory not found"
-    exit 1
-fi
-
-echo "✅ Prerequisites check passed"
-
-# Start Whisper Service (Port 5001)
-echo ""
-echo "1. Starting Whisper Transcription Service..."
-if check_port 5001; then
-    start_service "Whisper" "python3 whisper_service.py" 5001
-else
-    echo "⚠️  Whisper service port 5001 is busy, skipping..."
-fi
-
 # Start Backend API (Port 8000)
 echo ""
-echo "2. Starting Backend API..."
+echo "1. Starting Backend API..."
 if check_port 8000; then
     start_service "Backend" "python3 -m uvicorn main:app --reload --port 8000" 8000 "backend"
 else
@@ -95,7 +73,7 @@ fi
 
 # Install frontend dependencies if needed
 echo ""
-echo "3. Checking Frontend Dependencies..."
+echo "2. Checking Frontend Dependencies..."
 cd frontend
 if [ ! -d "node_modules" ]; then
     echo "Installing frontend dependencies..."
@@ -104,7 +82,7 @@ fi
 
 # Start Frontend (Port 3000)
 echo ""
-echo "4. Starting Frontend..."
+echo "3. Starting Frontend..."
 cd ..
 if check_port 3000; then
     start_service "Frontend" "npm run dev" 3000 "frontend"
@@ -118,11 +96,9 @@ echo ""
 echo "📋 Service URLs:"
 echo "   Frontend:  http://localhost:3000"
 echo "   Backend:   http://localhost:8000"
-echo "   Whisper:   http://localhost:5001"
 echo ""
 echo "📊 Health Checks:"
 echo "   Backend Health: http://localhost:8000/api/health"
-echo "   Whisper Health: http://localhost:5001/health"
 echo ""
 echo "🛑 To stop all services, run: ./stop_services.sh"
 echo ""

@@ -1,13 +1,17 @@
-"""Text-to-Speech service for multilingual audio generation using gTTS.
-Supports English, Hindi, Kannada, Bengali, and Bhojpuri."""
+"""
+Text-to-Speech service for multilingual audio generation using gTTS.
+Supports English, Hindi, Kannada, Bengali, and Bhojpuri.
+Runs in a separate thread to avoid blocking the asyncio event loop.
+"""
 
 import logging
 import os
 import base64
 import tempfile
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, Dict
 from gtts import gTTS
-import io
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -20,55 +24,51 @@ class TTSService:
         """Initializes the service."""
         try:
             logger.info("TTS Service initialized successfully.")
+            self.executor = ThreadPoolExecutor(max_workers=3)
         except Exception as e:
             logger.error(f"Failed to initialize TTS Service: {e}")
             raise
 
         # Language code mapping for gTTS
         self.language_map = {
+            'en': {'name': 'English', 'gtts_code': 'en'},
+            'bn': {'name': 'Bengali', 'gtts_code': 'bn'}, 
+            'bho': {'name': 'Bhojpuri', 'gtts_code': 'hi'},  # Use Hindi for Bhojpuri
+            'hi': {'name': 'Hindi', 'gtts_code': 'hi'},
+            'kn': {'name': 'Kannada', 'gtts_code': 'kn'},
+            # Mapping frontend codes to simple codes if needed
             'en-US': {'name': 'English', 'gtts_code': 'en'},
             'bn-IN': {'name': 'Bengali', 'gtts_code': 'bn'}, 
-            'bho-IN': {'name': 'Bhojpuri', 'gtts_code': 'hi'},  # Use Hindi for Bhojpuri
+            'bho-IN': {'name': 'Bhojpuri', 'gtts_code': 'hi'},
             'hi-IN': {'name': 'Hindi', 'gtts_code': 'hi'},
             'kn-IN': {'name': 'Kannada', 'gtts_code': 'kn'}
         }
 
-    def translate_text(self, text: str, language_code: str) -> str:
-        """Returns the text as-is since translation is handled by the frontend."""
-        # For the free deployment, we assume text is already in the correct language
-        # Translation can be handled by the frontend or external services
-        return text
-
-    def generate_speech(self, text_to_speak: str, language_code: str = "en-US") -> Optional[str]:
-        """Generates speech audio from text in the specified language.
-        
-        Args:
-            text_to_speak (str): The text to be spoken.
-            language_code (str): The target language code (e.g., 'hi-IN').
-            
-        Returns:
-            Optional[str]: Base64 encoded MP3 audio data, or None if generation fails.
+    def _generate_speech_blocking(self, text: str, language_code: str) -> Optional[str]:
+        """
+        Blocking internal method to generate speech.
         """
         try:
+            # Handle language code aliases
             lang_info = self.language_map.get(language_code)
+            if not lang_info:
+                # Try prefix match if full code not found
+                prefix = language_code.split('-')[0]
+                lang_info = self.language_map.get(prefix)
+            
             if not lang_info:
                 logger.error(f"Unsupported language code: {language_code}")
                 return None
 
-            # Use the text as-is (translation handled by frontend)
-            translated_text = text_to_speak
-            if not translated_text:
+            if not text:
                 logger.error("Text for speech synthesis is empty.")
                 return None
 
-            logger.info(f"Generating TTS for language {language_code}.")
-            logger.info(f"Text to synthesize: {translated_text[:100]}...")
-
-            # Step 2: Generate speech using gTTS
+            # Generate speech using gTTS
             gtts_code = lang_info['gtts_code']
             
             try:
-                tts = gTTS(text=translated_text, lang=gtts_code, slow=False)
+                tts = gTTS(text=text, lang=gtts_code, slow=False)
                 
                 # Save to a temporary file
                 with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as temp_file:
@@ -94,51 +94,37 @@ class TTSService:
             logger.error(f"TTS generation failed for language {language_code}: {e}", exc_info=True)
             return None
 
+    async def generate_speech_async(self, text: str, language_code: str = "en") -> Optional[str]:
+        """
+        Generates speech audio asynchronously using a thread pool.
+        
+        Args:
+            text: The text to be spoken.
+            language_code: The target language code.
+            
+        Returns:
+            Optional[str]: Base64 encoded MP3 audio data.
+        """
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(
+            self.executor, 
+            self._generate_speech_blocking, 
+            text, 
+            language_code
+        )
+
+    async def generate_speech_direct_async(self, text: str, language_code: str = "en") -> Optional[str]:
+        """Alias for generate_speech_async for consistency with previous API in chat.py"""
+        return await self.generate_speech_async(text, language_code)
+
     def get_supported_languages(self) -> Dict[str, str]:
         """Returns a dictionary of supported language codes and their names."""
-        return {code: info['name'] for code, info in self.language_map.items()}
+        # Return unique simple codes
+        return {k: v['name'] for k, v in self.language_map.items() if '-' not in k}
 
 # Global TTS service instance
-# This creates a single instance of the service that can be imported and used across your application.
 try:
     tts_service = TTSService()
 except Exception as e:
     logger.critical(f"Could not initialize TTSService: {e}")
     tts_service = None
-# Example usage:
-if __name__ == '__main__':
-    if tts_service:
-        print("TTS Service Initialized. Running examples...")
-        
-        # --- Example 1: Generate speech in Hindi ---
-        english_text = "Hello, how are you doing today? I hope you are having a wonderful day."
-        hindi_language_code = "hi-IN"
-        print(f"\nGenerating speech for: '{english_text}' in Hindi ({hindi_language_code})")
-        audio_content_base64 = tts_service.generate_speech(english_text, hindi_language_code)
-        
-        if audio_content_base64:
-            # Save the audio to a file to verify (MP3 format)
-            output_filename = "output_hindi.mp3"
-            with open(output_filename, "wb") as audio_file:
-                audio_file.write(base64.b64decode(audio_content_base64))
-            print(f"Audio content saved to '{output_filename}'.")
-        else:
-            print("Failed to generate Hindi audio.")
-
-        # --- Example 2: Generate speech in English ---
-        print(f"\nGenerating speech for: '{english_text}' in English (en-US)")
-        audio_content_base64_eng = tts_service.generate_speech(english_text, "en-US")
-        
-        if audio_content_base64_eng:
-            output_filename_eng = "output_english.mp3"
-            with open(output_filename_eng, "wb") as audio_file:
-                audio_file.write(base64.b64decode(audio_content_base64_eng))
-            print(f"Audio content saved to '{output_filename_eng}'.")
-        else:
-            print("Failed to generate English audio.")
-
-        # --- Example 3: Get supported languages ---
-        print("\nSupported Languages:")
-        print(tts_service.get_supported_languages())
-    else:
-        print("TTS Service failed to initialize.")

@@ -6,102 +6,56 @@ Provides endpoints to verify external service availability and basic metrics.
 import logging
 import time
 from typing import Dict, Any
-import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from config import settings
+# Import Groq client to checking health
+from services.groq_client import groq_client
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-async def check_ollama_health() -> Dict[str, Any]:
-    """Check Ollama service connectivity and model availability."""
+async def check_groq_health() -> Dict[str, Any]:
+    """Check Groq API connectivity."""
     # In demo mode, return healthy status without checking external service
     if settings.demo_mode:
         return {
             "status": "healthy",
             "message": "Demo mode - using mock responses",
-            "models_count": 1
+            "provider": "Groq (Mock)"
         }
     
     try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            # Check if Ollama is running
-            response = await client.get(f"{settings.ollama_base}/api/tags")
-            
-            if response.status_code == 200:
-                models = response.json().get("models", [])
-                model_available = any(
-                    model.get("name", "").startswith(settings.model_name) 
-                    for model in models
-                )
+        # We can perform a lightweight check, e.g. listing models or a simple chat
+        # Groq client doesn't have a specific ping, but we can try a simple chat
+        # or just check if API key is present. A real check is better.
+        # Let's try to list models if client exposes it, or just send a tiny prompt.
+        # groq_client in services doesn't expose list_models, but we can add or just use chat.
+        
+        # Simple prompt
+        try:
+             # Minimal token usage check
+             await groq_client.chat("ping", temperature=0.0)
+             return {
+                 "status": "healthy",
+                 "message": "Groq API available",
+                 "provider": "Groq"
+             }
+        except Exception as e:
+             return {
+                 "status": "unhealthy",
+                 "message": f"Groq API error: {str(e)}",
+                 "provider": "Groq"
+             }
                 
-                return {
-                    "status": "healthy" if model_available else "degraded",
-                    "message": f"Model {settings.model_name} {'available' if model_available else 'not found'}",
-                    "models_count": len(models)
-                }
-            else:
-                return {
-                    "status": "unhealthy",
-                    "message": f"Ollama returned status {response.status_code}",
-                    "models_count": 0
-                }
-                
-    except httpx.TimeoutException:
-        return {
-            "status": "unhealthy",
-            "message": "Ollama service timeout",
-            "models_count": 0
-        }
     except Exception as e:
         return {
             "status": "unhealthy",
-            "message": f"Ollama connection error: {str(e)}",
-            "models_count": 0
+            "message": f"Health check error: {str(e)}",
+            "provider": "Groq"
         }
-
-
-async def check_whisper_health() -> Dict[str, Any]:
-    """Check Whisper service connectivity."""
-    # In demo mode or when Whisper is disabled, return healthy status
-    if settings.demo_mode or not getattr(settings, 'enable_whisper', True):
-        return {
-            "status": "healthy",
-            "message": "Using browser speech recognition"
-        }
-    
-    try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            # Check if Whisper service is running
-            response = await client.get(f"{settings.whisper_base}/health")
-            
-            if response.status_code == 200:
-                return {
-                    "status": "healthy",
-                    "message": "Whisper service available"
-                }
-            else:
-                return {
-                    "status": "healthy",  # Don't fail if Whisper is unavailable
-                    "message": "Whisper unavailable, using browser STT"
-                }
-                
-    except httpx.TimeoutException:
-        return {
-            "status": "healthy",  # Don't fail if Whisper is unavailable
-            "message": "Whisper timeout, using browser STT"
-        }
-    except Exception as e:
-        return {
-            "status": "healthy",  # Don't fail if Whisper is unavailable
-            "message": "Whisper unavailable, using browser STT"
-        }
-
-
-
 
 
 @router.get("/health")
@@ -113,13 +67,11 @@ async def health_check():
     start_time = time.time()
     
     # Check external services
-    ollama_health = await check_ollama_health()
-    whisper_health = await check_whisper_health()
+    groq_health = await check_groq_health()
     
     # Determine overall health
     services_healthy = (
-        ollama_health["status"] == "healthy" and 
-        whisper_health["status"] in ["healthy", "degraded"]
+        groq_health["status"] == "healthy"
     )
     
     overall_status = "healthy" if services_healthy else "unhealthy"
@@ -131,13 +83,12 @@ async def health_check():
         "timestamp": time.time(),
         "response_time_ms": response_time,
         "services": {
-            "ollama": ollama_health,
-            "whisper": whisper_health
+            "llm": groq_health,
+            "stt": groq_health # Groq handles both
         },
         "configuration": {
-            "ollama_base": settings.ollama_base,
-            "whisper_base": settings.whisper_base,
-            "model_name": settings.model_name
+            "model_name": settings.model_name,
+            "stt_model": settings.stt_model
         }
     }
     
@@ -152,31 +103,16 @@ async def health_check():
     )
 
 
-@router.get("/health/ollama")
-async def ollama_health_check():
-    """Specific health check for Ollama service."""
-    health_data = await check_ollama_health()
-    status_code = 200 if health_data["status"] in ["healthy", "degraded"] else 503
-    
-    return JSONResponse(
-        status_code=status_code,
-        content=health_data
-    )
-
-
-@router.get("/health/whisper")
-async def whisper_health_check():
-    """Specific health check for Whisper service."""
-    health_data = await check_whisper_health()
+@router.get("/health/llm")
+async def llm_health_check():
+    """Specific health check for LLM service."""
+    health_data = await check_groq_health()
     status_code = 200 if health_data["status"] == "healthy" else 503
     
     return JSONResponse(
         status_code=status_code,
         content=health_data
     )
-
-
-
 
 
 @router.get("/metrics")
@@ -228,9 +164,9 @@ async def readiness_check():
         return {"status": "ready", "message": "Demo mode - service is ready"}
     
     # Check if critical services are available
-    ollama_health = await check_ollama_health()
+    groq_health = await check_groq_health()
     
-    if ollama_health["status"] in ["healthy", "degraded"]:
+    if groq_health["status"] == "healthy":
         return {"status": "ready", "message": "Service is ready to accept traffic"}
     else:
         return JSONResponse(

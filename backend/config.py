@@ -11,12 +11,10 @@ import os
 class Settings(BaseSettings):
     """Application settings with environment variable support."""
     
-    # Ollama Configuration
-    ollama_base: str = "http://localhost:11434"
-    model_name: str = "alibayram/medgemma:4b"
-    
-    # Whisper Configuration  
-    whisper_base: str = "http://localhost:5001"
+    # Groq Configuration
+    groq_api_key: Optional[str] = os.getenv("GROQ_API_KEY")
+    model_name: str = "llama-3.3-70b-versatile"
+    stt_model: str = "whisper-large-v3" # Multilingual support
     
     # Application Configuration
     port: int = int(os.getenv("PORT", "8000"))  # Render sets PORT env var
@@ -29,13 +27,7 @@ class Settings(BaseSettings):
     render_service_name: Optional[str] = os.getenv("RENDER_SERVICE_NAME")
     
     # CORS Configuration - dynamically set for Render
-    cors_origins: List[str] = [
-        "http://localhost:3000", 
-        "http://localhost:3001", 
-        "http://localhost:3002", 
-        "http://localhost:5173",
-        "http://localhost:8080"
-    ]
+    cors_origins: str = "http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:5173,http://localhost:8080"
     
     # Security Configuration
     max_request_size: str = "10MB"
@@ -56,9 +48,12 @@ class Settings(BaseSettings):
     # Monitoring
     sentry_dsn: Optional[str] = None
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    model_config = {
+        'protected_namespaces': (),
+        'env_file': os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"),
+        'env_file_encoding': "utf-8",
+        'extra': 'ignore'
+    }
         
     def get_cors_origins(self) -> List[str]:
         """Parse CORS origins from environment variable if provided as string."""
