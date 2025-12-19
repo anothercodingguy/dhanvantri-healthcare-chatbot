@@ -240,7 +240,7 @@ function App() {
   const speakText = async (text, language = selectedLanguage) => {
     try {
       setIsLoading(true);
-      
+
       const response = await fetch('/api/chat/tts', {
         method: 'POST',
         headers: {
@@ -257,28 +257,28 @@ function App() {
       }
 
       const data = await response.json();
-      
+
       // Convert base64 audio to blob and play
       const audioBytes = atob(data.audio);
       const audioArray = new Uint8Array(audioBytes.length);
       for (let i = 0; i < audioBytes.length; i++) {
         audioArray[i] = audioBytes.charCodeAt(i);
       }
-      
-      const audioBlob = new Blob([audioArray], { type: 'audio/wav' });
+
+      const audioBlob = new Blob([audioArray], { type: 'audio/mpeg' });
       const audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
-      
+
       audio.onended = () => {
         URL.revokeObjectURL(audioUrl);
       };
-      
+
       await audio.play();
-      
+
     } catch (err) {
       console.error('TTS error:', err);
       setError(`TTS failed: ${err.message}`);
-      
+
       // Fallback to browser TTS
       if ('speechSynthesis' in window) {
         const speechLanguageCodes = {
@@ -483,7 +483,7 @@ function App() {
                   <div className="message-text">
                     {message.message}
                   </div>
-                  
+
                   {!message.is_user && (
                     <div className="message-actions">
                       <button
@@ -638,9 +638,9 @@ function App() {
 
       </footer>
 
-      <NewsModal 
-        isOpen={isNewsModalOpen} 
-        onClose={() => setIsNewsModalOpen(false)} 
+      <NewsModal
+        isOpen={isNewsModalOpen}
+        onClose={() => setIsNewsModalOpen(false)}
       />
     </div>
   );

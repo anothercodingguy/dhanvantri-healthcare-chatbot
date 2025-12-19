@@ -142,8 +142,9 @@ async def process_chat_message(message: str, language: str = "en", user_id: Opti
             llm_response = await groq_client.chat(message, system_prompt, temperature=0.1)
             logger.info("Successfully received response from Groq")
         except Exception as e:
-            logger.error(f"Groq service error: {e}")
-            llm_response = "I apologize, but I am currently unable to process your request. Please try again later."
+            logger.error(f"Groq service error: {e}", exc_info=True)
+            llm_response = f"Error: {str(e)}" # Temporary for debugging
+            # llm_response = "I apologize, but I am currently unable to process your request. Please try again later."
         
         # Clean the output (reusing medgemma cleaning as it general cleaning)
         llm_response = clean_medgemma_output(llm_response)
@@ -522,7 +523,7 @@ async def text_to_speech_endpoint(request: TTSRequest):
                 "audio": audio_base64,
                 "language": request.language,
                 "text": request.text,
-                "format": "wav",
+                "format": "mp3",
                 "encoding": "base64"
             }
         )
@@ -576,7 +577,7 @@ async def text_to_speech_direct_endpoint(request: TTSRequest):
                 "audio": audio_base64,
                 "language": request.language,
                 "text": request.text,
-                "format": "wav",
+                "format": "mp3",
                 "encoding": "base64",
                 "method": "direct"
             }
