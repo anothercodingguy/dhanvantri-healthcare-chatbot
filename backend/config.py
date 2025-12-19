@@ -13,7 +13,10 @@ class Settings(BaseSettings):
     
     # Groq Configuration
     groq_api_key: Optional[str] = os.getenv("GROQ_API_KEY")
-    model_name: str = "llama-3.3-70b-versatile"
+    # If MODEL_NAME is set to "mock-model" by accident (Render default?), override it.
+    model_name: str = os.getenv("MODEL_NAME", "llama-3.3-70b-versatile")
+    if model_name == "mock-model":
+        model_name = "llama-3.3-70b-versatile"
     stt_model: str = "whisper-large-v3" # Multilingual support
     
     # Application Configuration

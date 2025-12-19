@@ -28,16 +28,16 @@ class EdgeTTSService:
             # Mapping of language codes to specific Neural voices
             # Selected for natural sounding medical context
             self.voice_map = {
-                'en': 'en-US-AriaNeural',      # Friendly, clear female voice
-                'hi': 'hi-IN-SwaraNeural',     # Natural Hindi voice
-                'bn': 'bn-IN-TanishaaNeural',  # Bengali voice
-                'kn': 'kn-IN-GaganNeural',     # Kannada voice
-                'ta': 'ta-IN-PallaviNeural',   # Tamil voice
-                'te': 'te-IN-MohanNeural',     # Telugu voice
-                'mr': 'mr-IN-AarohiNeural',    # Marathi voice
-                'gu': 'gu-IN-DhwaniNeural',    # Gujarati voice
-                'ur': 'ur-IN-GulshanNeural',   # Urdu voice
-                'bho': 'hi-IN-MadhurNeural',   # Fallback for Bhojpuri (Hindi variant)
+                'en': 'en-US-ChristopherNeural', # Male voice
+                'hi': 'hi-IN-MadhurNeural',      # Male Hindi voice
+                'bn': 'bn-IN-TanishaaNeural',    # Bengali (Keep Female)
+                'kn': 'kn-IN-GaganNeural',       # Kannada (Male)
+                'ta': 'ta-IN-ValluvarNeural',    # Tamil (Male)
+                'te': 'te-IN-MohanNeural',       # Telugu (Male)
+                'mr': 'mr-IN-AarohiNeural',      # Marathi (Female)
+                'gu': 'gu-IN-DhwaniNeural',      # Gujarati (Female)
+                'ur': 'ur-IN-SalmanNeural',      # Urdu (Male)
+                'bho': 'hi-IN-MadhurNeural',     # Fallback
             }
             
             # Map complex codes (e.g., en-US) to simple codes
