@@ -67,6 +67,18 @@ class User:
         self.created_at = datetime.fromisoformat(data.get("created_at", datetime.now().isoformat()))
 
 
+class UserDocument:
+    """Data structure for uploaded user documents."""
+    
+    def __init__(self, text: str, filename: str, doc_type: str, user_id: Optional[int] = None):
+        self.id = f"{datetime.now().isoformat()}_{hash(filename) % 10000}"
+        self.user_id = user_id
+        self.filename = filename
+        self.text = text
+        self.doc_type = doc_type  # 'pdf', 'json'
+        self.timestamp = datetime.now()
+
+
 class InMemoryStorage:
     """In-memory storage manager for Dhanvantri chatbot data."""
     
@@ -74,6 +86,7 @@ class InMemoryStorage:
         self.disease_facts: List[DiseaseSnippet] = []
         self.users: List[User] = []
         self.chat_history: List[ChatMessage] = []
+        self.documents: List[UserDocument] = []  # Store parsed documents
         self._loaded = False
     
     def load_seed_data(self, data_dir: str = "data") -> None:
@@ -150,6 +163,21 @@ class InMemoryStorage:
         """Clear all chat history (useful for testing/reset)."""
         self.chat_history.clear()
         logger.info("Chat history cleared")
+
+    def add_document(self, text: str, filename: str, doc_type: str, user_id: Optional[int] = None) -> UserDocument:
+        """Add a parsed document to storage."""
+        doc = UserDocument(text, filename, doc_type, user_id)
+        self.documents.append(doc)
+        logger.info(f"Stored document: {filename} for user {user_id}")
+        return doc
+
+    def get_user_documents(self, user_id: int) -> List[UserDocument]:
+        """Get all documents for a specific user."""
+        # For demo purposes, if user_id is None or 0, return all (or simple logic)
+        # Assuming simple single-user demo for now if user_id is not strictly managed.
+        if user_id is None: 
+            return self.documents 
+        return [doc for doc in self.documents if doc.user_id == user_id or doc.user_id is None]
 
 
 # Global storage instance

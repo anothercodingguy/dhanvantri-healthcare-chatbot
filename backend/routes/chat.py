@@ -121,6 +121,14 @@ async def process_chat_message(message: str, language: str = "en", user_id: Opti
         # Search for relevant medical context
         storage = get_storage()
         medical_context = storage.search_medical_context(" ".join(keywords), limit=3)
+
+        # RAG: Retrieve user's uploaded documents
+        user_documents = storage.get_user_documents(user_id)
+        user_context_string = ""
+        if user_documents:
+            logger.info(f"Adding {len(user_documents)} user documents to context")
+            for doc in user_documents:
+                user_context_string += f"--- DOCUMENT: {doc.filename} ---\n{doc.text[:2000]}\n\n" # Truncate to avoid context limit
         
         # Translate message to English if needed for LLM processing
         original_message = message
@@ -134,8 +142,8 @@ async def process_chat_message(message: str, language: str = "en", user_id: Opti
                 logger.warning(f"Translation failed: {e}. Proceeding with original message.")
                 translation_unavailable = True
         
-        # Construct system prompt with medical context
-        system_prompt = construct_system_prompt(medical_context, language)
+        # Construct system prompt with medical context AND user health context
+        system_prompt = construct_system_prompt(medical_context, user_context_string, language)
         
         # Get response from Groq
         try:

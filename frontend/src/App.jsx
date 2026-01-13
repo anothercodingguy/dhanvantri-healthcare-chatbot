@@ -248,9 +248,75 @@ function App() {
     }
   };
 
-  // Image upload handler
-  const handleImageUpload = (event) => {
+  // Document upload handler
+  const handleFileUpload = (event) => {
     const file = event.target.files[0];
+    if (!file) return;
+
+    if (file.type.startsWith('image/')) {
+      handleImageUpload(event);
+      return;
+    }
+
+    // Handle PDF/JSON upload
+    uploadDocument(file);
+  };
+
+  const uploadDocument = async (file) => {
+    setIsLoading(true);
+
+    // Add optimistic message
+    setMessages(prev => [...prev, {
+      id: Date.now(),
+      message: `Uploading ${file.name}...`,
+      is_user: true,
+      language: selectedLanguage,
+      timestamp: new Date()
+    }]);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('user_id', 1); // Mock user ID
+
+    try {
+      const response = await fetch('/api/documents/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) throw new Error('Upload failed');
+
+      const data = await response.json();
+
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        message: `✅ Analyzed ${file.name}. I extracted the data. You can now ask questions about it!`,
+        is_user: false,
+        language: selectedLanguage,
+        timestamp: new Date(),
+        sources: [{ title: file.name, source: "User Upload" }]
+      }]);
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      setError(`Failed to upload ${file.name}`);
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        message: `❌ Failed to process ${file.name}.`,
+        is_user: false,
+        isError: true,
+        language: selectedLanguage,
+        timestamp: new Date()
+      }]);
+    } finally {
+      setIsLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // Image upload handler (existing logic wrapped or kept distinct)
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0] || (event.target.files && event.target.files[0]);
     if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -537,8 +603,8 @@ function App() {
             <input
               type="file"
               ref={fileInputRef}
-              onChange={handleImageUpload}
-              accept="image/*"
+              onChange={handleFileUpload}
+              accept="image/*,application/pdf,application/json"
               style={{ display: 'none' }}
             />
             <button

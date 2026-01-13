@@ -75,10 +75,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from routes.documents import router as documents_router
+
 # Include routers
 app.include_router(health_router, prefix="/api", tags=["health"])
 app.include_router(chat_router, prefix="/api", tags=["chat"])
 app.include_router(news_router, prefix="/api", tags=["news"])
+app.include_router(documents_router, prefix="/api/documents", tags=["documents"])
 
 # Serve frontend static files
 frontend_dist_path = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")

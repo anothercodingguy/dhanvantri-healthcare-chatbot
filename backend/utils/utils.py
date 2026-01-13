@@ -24,26 +24,31 @@ def append_medical_disclaimer(response: str) -> str:
     return response
 
 
-def construct_system_prompt(medical_context: List[DiseaseSnippet] = None, language: str = "en") -> str:
+def construct_system_prompt(medical_context: List[DiseaseSnippet] = None, user_health_context: str = None, language: str = "en") -> str:
     """
     Construct system prompt for medical conversations with MedGemma-4B.
     
     Args:
         medical_context: List of relevant medical facts to include as context
+        user_health_context: Extracted text from uploaded user documents
         language: Target language for the response
         
     Returns:
         Formatted system prompt for the LLM
     """
-    base_prompt = """You are Dhanvantri, a helpful medical education assistant. You provide accurate, evidence-based health information to help users understand medical topics.
+    base_prompt = """You are Dhanvantri, a helpful medical education assistant. You provide accurate, evidence-based health information.
+
+CRITICAL SAFETY & PRIVACY GUARDRAILS:
+1. YOU ARE NOT A DOCTOR. You cannot diagnose, treat, or prescribe.
+2. MEDICAL DISCLAIMER: You MUST wrap every medical insight with a disclaimer stating you are an AI and this is not professional advice.
+3. DATA PRIVACY: Use the user's uploaded health context ONLY for this session. Do not leak personal identifiers.
+4. ACCURACY: If interpreting a lab report or health document, warn the user that AI interpretation can be flawed and they should verify with a professional.
 
 Guidelines:
 - Provide clear, accurate medical information based on established medical knowledge
-- Always emphasize that your information is educational and not a substitute for professional medical advice
 - If asked about serious symptoms or emergencies, strongly recommend immediate medical attention
 - Be empathetic and supportive while maintaining medical accuracy
-- Keep responses concise but informative
-- If uncertain about any medical information, recommend consulting healthcare professionals"""
+- Keep responses concise but informative"""
 
     # Add language instruction if not English
     if language != "en":
@@ -56,9 +61,13 @@ Guidelines:
         lang_name = language_names.get(language, language)
         base_prompt += f"\n- Respond in {lang_name} language"
 
-    # Add medical context if provided
+    # Add user's personal health context (RAG)
+    if user_health_context:
+        base_prompt += f"\n\nUSER UPLOADED HEALTH RECORDS (Analyze this data safely):\n{user_health_context}\n"
+
+    # Add general medical context if provided
     if medical_context:
-        context_text = "\n\nRelevant Medical Information:\n"
+        context_text = "\n\nRelevant General Medical Information (Reference):\n"
         for i, snippet in enumerate(medical_context[:3], 1):  # Limit to 3 most relevant
             content = snippet.get_content(language)
             context_text += f"{i}. {snippet.title}: {content[:200]}...\n"
