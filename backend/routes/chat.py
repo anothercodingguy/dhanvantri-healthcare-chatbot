@@ -490,7 +490,6 @@ async def text_to_speech_endpoint(request: TTSRequest):
     Text-to-Speech endpoint.
     """
     try:
-    try:
         logger.info(f"Received TTS request for language: {request.language} (DEPRECATED - Should use Client Side)")
         
         # We now rely on Client-Side TTS. This endpoint remains for compatibility but returns empty.
