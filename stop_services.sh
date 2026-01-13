@@ -52,8 +52,7 @@ stop_service_by_port() {
     fi
 }
 
-# Stop services by PID files first
-stop_service_by_pid "Whisper"
+# Stop services by PID files
 stop_service_by_pid "Backend" 
 stop_service_by_pid "Frontend"
 
@@ -61,12 +60,11 @@ echo ""
 echo "Checking ports for any remaining processes..."
 
 # Stop services by port as backup
-stop_service_by_port "Whisper Service" 5001
 stop_service_by_port "Backend API" 8000
 stop_service_by_port "Frontend Dev Server" 3000
 
 # Clean up any remaining PID files
-rm -f whisper_pid.txt backend_pid.txt frontend_pid.txt
+rm -f backend_pid.txt frontend_pid.txt
 
 echo ""
 echo "🎉 All services stopped successfully!"
