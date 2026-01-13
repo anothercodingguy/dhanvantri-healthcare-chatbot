@@ -37,15 +37,6 @@ start_service() {
     return 0
 }
 
-# Check if we should start Whisper (optional for Render)
-if [ "${ENABLE_WHISPER:-true}" = "true" ]; then
-    echo "1. Starting Whisper Transcription Service..."
-    cd /opt/render/project/src
-    start_service "Whisper" "python whisper_service.py" 5001 &
-else
-    echo "1. Skipping Whisper service (browser STT will be used)"
-fi
-
 # Start Backend API (main service)
 echo "2. Starting Backend API..."
 cd /opt/render/project/src/backend

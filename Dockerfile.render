@@ -23,13 +23,9 @@ WORKDIR /opt/render/project/src
 
 # Copy requirements and install Python dependencies
 COPY backend/requirements.txt ./backend/
-COPY whisper_requirements.txt ./
 RUN pip install --no-cache-dir -r backend/requirements.txt
-RUN pip install --no-cache-dir -r whisper_requirements.txt
-
 # Copy application code
 COPY backend/ ./backend/
-COPY whisper_service.py ./
 COPY data/ ./data/
 
 # Copy built frontend
