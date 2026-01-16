@@ -402,7 +402,6 @@ The information provided by this chatbot should not be considered as medical adv
 For questions, feedback, or support:
 
 - **GitHub Issues**: [Create an issue](https://github.com/yourusername/dhanvantri/issues)
-- **Email**: your.email@example.com
 
 ---
 
